@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Tarjeta de un módulo en el menú principal (componente reutilizable). -->
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
-    style="@style/ArchiveX.Tarjeta"
+    style="@style/ArchiveXTarjeta"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="6dp"
@@ -25,14 +25,14 @@
 
         <TextView
             android:id="@+id/tituloModulo"
-            style="@style/ArchiveX.Titulo"
+            style="@style/ArchiveXTitulo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp" />
 
         <TextView
             android:id="@+id/descripcionModulo"
-            style="@style/ArchiveX.Etiqueta"
+            style="@style/ArchiveXEtiqueta"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp" />

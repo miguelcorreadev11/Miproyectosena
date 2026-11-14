@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Fila genérica de los listados: título, subtítulo, detalle e insignia de estado. -->
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
-    style="@style/ArchiveX.Tarjeta"
+    style="@style/ArchiveXTarjeta"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="4dp"
@@ -24,7 +24,7 @@
 
             <TextView
                 android:id="@+id/textoTitulo"
-                style="@style/ArchiveX.Titulo"
+                style="@style/ArchiveXTitulo"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1" />
@@ -44,14 +44,14 @@
 
         <TextView
             android:id="@+id/textoSubtitulo"
-            style="@style/ArchiveX.Valor"
+            style="@style/ArchiveXValor"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp" />
 
         <TextView
             android:id="@+id/textoDetalle"
-            style="@style/ArchiveX.Etiqueta"
+            style="@style/ArchiveXEtiqueta"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp" />
