@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tema oscuro de ArchiveX Móvil basado en Material Components. -->
+    <style name="Theme.ArchiveXMovil" parent="Theme.MaterialComponents.NoActionBar">
+        <item name="colorPrimary">@color/acento</item>
+        <item name="colorPrimaryVariant">@color/acento_oscuro</item>
+        <item name="colorOnPrimary">@color/fondo_principal</item>
+        <item name="colorSecondary">@color/acento</item>
+        <item name="colorOnSecondary">@color/fondo_principal</item>
+        <item name="colorSurface">@color/fondo_tarjeta</item>
+        <item name="colorOnSurface">@color/texto</item>
+        <item name="android:colorBackground">@color/fondo_principal</item>
+        <item name="android:windowBackground">@color/fondo_principal</item>
+        <item name="android:statusBarColor">@color/fondo_principal</item>
+        <item name="android:navigationBarColor">@color/fondo_principal</item>
+        <item name="colorControlActivated">@color/acento</item>
+        <item name="textInputStyle">@style/ArchiveX.Campo</item>
+        <item name="materialButtonStyle">@style/ArchiveX.Boton</item>
+    </style>
+
+    <style name="ArchiveX.Campo" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/acento</item>
+        <item name="hintTextColor">@color/acento</item>
+        <item name="android:textColorHint">@color/texto_atenuado</item>
+        <item name="boxCornerRadiusTopStart">12dp</item>
+        <item name="boxCornerRadiusTopEnd">12dp</item>
+        <item name="boxCornerRadiusBottomStart">12dp</item>
+        <item name="boxCornerRadiusBottomEnd">12dp</item>
+    </style>
+
+    <style name="ArchiveX.Boton" parent="Widget.MaterialComponents.Button">
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:minHeight">56dp</item>
+        <item name="cornerRadius">12dp</item>
+    </style>
+
+    <style name="ArchiveX.Boton.Contorno" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="android:textAllCaps">false</item>
+        <item name="android:minHeight">56dp</item>
+        <item name="cornerRadius">12dp</item>
+        <item name="strokeColor">@color/acento</item>
+    </style>
+
+    <style name="ArchiveX.Tarjeta" parent="Widget.MaterialComponents.CardView">
+        <item name="cardBackgroundColor">@color/fondo_tarjeta</item>
+        <item name="cardCornerRadius">16dp</item>
+        <item name="strokeColor">@color/borde</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="cardElevation">0dp</item>
+    </style>
+
+    <style name="ArchiveX.Titulo">
+        <item name="android:textColor">@color/texto</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="ArchiveX.Etiqueta">
+        <item name="android:textColor">@color/texto_atenuado</item>
+        <item name="android:textSize">13sp</item>
+    </style>
+
+    <style name="ArchiveX.Valor">
+        <item name="android:textColor">@color/texto_secundario</item>
+        <item name="android:textSize">15sp</item>
+    </style>
+</resources>

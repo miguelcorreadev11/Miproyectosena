@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ArchiveX Móvil (AA2-EV02): cliente Android de la API REST de ArchiveX. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Único permiso necesario: consumir la API por la red (principio de mínimo privilegio). -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.ArchiveXMovil">
+
+        <!-- Acceso -->
+        <activity
+            android:name=".ui.login.LoginActivity"
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".ui.login.RegistroActivity" android:windowSoftInputMode="adjustResize" />
+
+        <!-- Menú y módulos -->
+        <activity android:name=".ui.menu.MenuActivity" />
+        <activity android:name=".ui.productos.ProductosActivity" />
+        <activity android:name=".ui.productos.ProductoDetalleActivity" />
+        <activity android:name=".ui.productos.ProductoFormActivity" android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".ui.catalogos.CatalogosActivity" />
+        <activity android:name=".ui.catalogos.CategoriasActivity" />
+        <activity android:name=".ui.catalogos.AlmacenesActivity" />
+        <activity android:name=".ui.catalogos.ProveedoresActivity" />
+        <activity android:name=".ui.movimientos.MovimientosActivity" />
+        <activity android:name=".ui.movimientos.MovimientoFormActivity" android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".ui.compras.ComprasActivity" />
+        <activity android:name=".ui.usuarios.UsuariosActivity" />
+    </application>
+
+</manifest>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ambiente de desarrollo: la API de ArchiveX corre por HTTP en la red local (sin TLS).
+     En producción se debe publicar la API con HTTPS y quitar este permiso. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Paleta de ArchiveX: la misma de vista.TemaColores en la versión de escritorio. -->
+<resources>
+    <color name="fondo_principal">#0B1220</color>
+    <color name="fondo_secundario">#111827</color>
+    <color name="fondo_tarjeta">#0F172A</color>
+    <color name="borde">#334155</color>
+    <color name="acento">#ED953E</color>
+    <color name="acento_oscuro">#C9732F</color>
+    <color name="texto">#FFFFFF</color>
+    <color name="texto_secundario">#E5E7EB</color>
+    <color name="texto_atenuado">#94A3B8</color>
+    <color name="exito">#22C55E</color>
+    <color name="alerta">#F59E0B</color>
+    <color name="peligro">#EF4444</color>
+    <color name="info">#3B82F6</color>
+</resources>

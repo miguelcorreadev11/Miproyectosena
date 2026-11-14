@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ArchiveX Móvil</string>
+    <string name="subtitulo">Gestión de inventario en tu bolsillo</string>
+    <string name="descripcion_logo">Logo de ArchiveX</string>
+
+    <!-- Inicio de sesión y registro -->
+    <string name="correo">Correo electrónico</string>
+    <string name="contrasena">Contraseña</string>
+    <string name="confirmar_contrasena">Confirmar contraseña</string>
+    <string name="nombre">Nombre</string>
+    <string name="apellido">Apellido</string>
+    <string name="telefono">Teléfono (opcional)</string>
+    <string name="iniciar_sesion">Iniciar sesión</string>
+    <string name="crear_cuenta">Crear cuenta</string>
+    <string name="sin_cuenta">¿No tienes cuenta? Regístrate</string>
+    <string name="configurar_servidor">Servidor: %1$s · Cambiar</string>
+    <string name="registro_titulo">Registro de usuario</string>
+    <string name="registro_exitoso">Cuenta creada. Ya puedes iniciar sesión.</string>
+
+    <!-- Menú -->
+    <string name="saludo">Hola, %1$s</string>
+    <string name="modulo_productos">Productos e inventario</string>
+    <string name="modulo_catalogos">Catálogos</string>
+    <string name="modulo_movimientos">Movimientos</string>
+    <string name="modulo_compras">Compras</string>
+    <string name="modulo_usuarios">Usuarios</string>
+    <string name="cerrar_sesion">Cerrar sesión</string>
+    <string name="confirmar_cerrar_sesion">¿Deseas cerrar la sesión?</string>
+    <string name="desc_productos">Existencias, precios y búsqueda</string>
+    <string name="desc_catalogos">Categorías, almacenes y proveedores</string>
+    <string name="desc_movimientos">Entradas, salidas y ajustes</string>
+    <string name="desc_compras">Pedidos a proveedores</string>
+    <string name="desc_usuarios">Cuentas registradas</string>
+
+    <!-- Catálogos -->
+    <string name="categorias">Categorías</string>
+    <string name="almacenes">Almacenes</string>
+    <string name="proveedores">Proveedores</string>
+
+    <!-- Comunes -->
+    <string name="buscar">Buscar…</string>
+    <string name="guardar">Guardar</string>
+    <string name="cancelar">Cancelar</string>
+    <string name="eliminar">Eliminar</string>
+    <string name="editar">Editar</string>
+    <string name="aceptar">Aceptar</string>
+    <string name="reintentar">Reintentar</string>
+    <string name="sin_registros">No hay registros para mostrar</string>
+    <string name="sin_resultados">Ningún registro coincide con la búsqueda</string>
+    <string name="campo_obligatorio">Campo obligatorio</string>
+    <string name="guardado">Registro guardado</string>
+    <string name="eliminado">Registro eliminado</string>
+    <string name="confirmar_eliminar">¿Eliminar «%1$s»? Esta acción no se puede deshacer.</string>
+    <string name="nuevo">Nuevo</string>
+    <string name="total_registros">%1$d registros</string>
+
+    <!-- Productos -->
+    <string name="producto_nuevo">Nuevo producto</string>
+    <string name="producto_editar">Editar producto</string>
+    <string name="descripcion">Descripción</string>
+    <string name="categoria">Categoría</string>
+    <string name="precio_compra">Precio de compra</string>
+    <string name="precio_venta">Precio de venta</string>
+    <string name="cantidad">Cantidad</string>
+    <string name="producto_activo">Producto activo</string>
+    <string name="cantidad_por_movimientos">La existencia se modifica con movimientos</string>
+    <string name="error_precio_venta">El precio de venta no puede ser menor que el de compra</string>
+
+    <!-- Movimientos -->
+    <string name="movimiento_nuevo">Registrar movimiento</string>
+    <string name="producto">Producto</string>
+    <string name="almacen">Almacén</string>
+    <string name="tipo_movimiento">Tipo de movimiento</string>
+    <string name="motivo">Motivo (opcional)</string>
+    <string name="ayuda_ajuste">En un ajuste escribe la existencia contada en el almacén</string>
+    <string name="error_cantidad">Escribe una cantidad válida</string>
+
+    <!-- Servidor -->
+    <string name="servidor_titulo">Servidor de la API</string>
+    <string name="servidor_ayuda">Emulador: 10.0.2.2 · Teléfono: IP del computador en la red Wi-Fi</string>
+    <string name="servidor_invalido">La dirección no es válida</string>
+    <string name="volver">Volver</string>
+</resources>
