@@ -1,4 +1,4 @@
-# ArchiveX Móvil 2.0
+# ArchiveX Móvil
 
 Cliente Android del sistema de inventario **ArchiveX** (evidencia AA2-EV02, SENA).
 Consume la API REST del proyecto de escritorio (Java + MySQL).
