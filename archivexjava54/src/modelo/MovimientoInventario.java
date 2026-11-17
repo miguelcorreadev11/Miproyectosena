@@ -278,8 +278,8 @@ public class MovimientoInventario {
             deshacer(con);
             // Registra la traza del error en la consola de NetBeans.
             Logger.getLogger(MovimientoInventario.class.getName()).log(Level.SEVERE, null, ex);
-            // Informa el motivo del fallo (por ejemplo, inventario insuficiente).
-            JOptionPane.showMessageDialog(null, "No se pudo registrar el movimiento: " + ex.getMessage(),
+            // Informa el motivo del fallo (por ejemplo, inventario insuficiente) sin detalles técnicos.
+            JOptionPane.showMessageDialog(null, "No se pudo registrar el movimiento: " + mensajeParaUsuario(ex),
                     "Error de base de datos", JOptionPane.ERROR_MESSAGE);
             // No se registró.
             return false;
@@ -288,6 +288,62 @@ public class MovimientoInventario {
             // Devuelve la conexión compartida al modo autocommit para los demás módulos.
             restaurarAutoCommit(con);
         }
+    }
+
+    // Traslada unidades de un almacén a otro en una sola transacción: salida en el origen y entrada
+    // en el destino con la misma fecha. Si cualquiera de los dos pasos falla, se deshace todo.
+    public static boolean registrarTransferencia(int idProducto, int idAlmacenOrigen, String nombreOrigen,
+            int idAlmacenDestino, String nombreDestino, int idUsuario, int cantidad, String motivo) {
+        Connection con = config.conexión_BD.getConnection();
+        if (con == null) {
+            JOptionPane.showMessageDialog(null, config.conexión_BD.MENSAJE_SIN_CONEXION,
+                    "Error de conexión", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+        String detalle = motivo == null || motivo.trim().isEmpty() ? "" : ": " + motivo.trim();
+        try {
+            con.setAutoCommit(false);
+            // Bloquea primero las filas de ambos almacenes en orden de id, para que dos transferencias
+            // cruzadas (A→B y B→A) no se bloqueen entre sí.
+            try (PreparedStatement ps = con.prepareStatement("SELECT id_inventario FROM inventarioporalmacen "
+                    + "WHERE id_producto = ? AND id_almacen IN (?, ?) ORDER BY id_almacen FOR UPDATE")) {
+                ps.setInt(1, idProducto);
+                ps.setInt(2, idAlmacenOrigen);
+                ps.setInt(3, idAlmacenDestino);
+                ps.executeQuery().close();
+            }
+            String fecha = obtenerFechaServidor(con);
+            // La salida valida dentro del bloqueo que el origen tenga unidades suficientes.
+            aplicarMovimiento(con, idProducto, idAlmacenOrigen, idUsuario, TIPO_SALIDA, cantidad, null,
+                    recortar("Transferencia a " + nombreDestino + detalle), fecha);
+            aplicarMovimiento(con, idProducto, idAlmacenDestino, idUsuario, TIPO_ENTRADA, cantidad, null,
+                    recortar("Transferencia desde " + nombreOrigen + detalle), fecha);
+            con.commit();
+            return true;
+        } catch (SQLException ex) {
+            config.conexión_BD.registrarError();
+            deshacer(con);
+            Logger.getLogger(MovimientoInventario.class.getName()).log(Level.SEVERE, null, ex);
+            JOptionPane.showMessageDialog(null, "No se pudo registrar la transferencia: " + mensajeParaUsuario(ex)
+                    + ".\nNo se modificó ningún almacén.", "Error de base de datos", JOptionPane.ERROR_MESSAGE);
+            return false;
+        } finally {
+            restaurarAutoCommit(con);
+        }
+    }
+
+    // Recorta el motivo al tamaño de la columna motivo VARCHAR(230).
+    private static String recortar(String texto) {
+        return texto.length() <= 230 ? texto : texto.substring(0, 230);
+    }
+
+    // Las validaciones propias se lanzan como SQLException sin SQLState y su texto se muestra tal cual;
+    // un error real de MySQL se resume para no mostrar detalles técnicos (la traza queda en el log).
+    static String mensajeParaUsuario(SQLException ex) {
+        if (ex.getSQLState() == null && ex.getMessage() != null) {
+            return ex.getMessage();
+        }
+        return "la base de datos rechazó la operación o se perdió la conexión";
     }
 
     // Fecha y hora actuales del servidor MySQL como texto 'AAAA-MM-DD HH:MM:SS'; al enviarla

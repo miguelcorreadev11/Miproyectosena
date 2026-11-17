@@ -187,4 +187,44 @@ public final class RecursosApp {
             }
         });
     }
+
+    // Ejecuta la acción de un botón que modifica el inventario sin permitir que un doble clic la
+    // repita: el botón queda deshabilitado mientras corre y se habilita después de los clics en cola.
+    public static void ejecutarUnaVez(final JButton boton, Runnable accion) {
+        if (!boton.isEnabled()) {
+            return;
+        }
+        boton.setEnabled(false);
+        try {
+            accion.run();
+        } finally {
+            javax.swing.SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    boton.setEnabled(true);
+                }
+            });
+        }
+    }
+
+    // Después de una operación confirmada en MySQL, vuelve a consultar las demás ventanas abiertas
+    // que muestran existencias (por ejemplo, la búsqueda abierta desde Compras).
+    public static void refrescarInventarioAbierto(java.awt.Window origen) {
+        for (java.awt.Window ventana : java.awt.Window.getWindows()) {
+            if (ventana == origen || !ventana.isDisplayable()) {
+                continue;
+            }
+            if (ventana instanceof Busqueda_Productos_Form) {
+                ((Busqueda_Productos_Form) ventana).buscarProductos();
+            } else if (ventana instanceof Movimientos_Form) {
+                ((Movimientos_Form) ventana).actualizarExistencia();
+                ((Movimientos_Form) ventana).cargarMovimientos();
+            } else if (ventana instanceof Productos_Inventario_Form) {
+                ((Productos_Inventario_Form) ventana).cargarProductos();
+                ((Productos_Inventario_Form) ventana).cargarInventario();
+            } else if (ventana instanceof Compras_Form) {
+                ((Compras_Form) ventana).cargarCompras();
+            }
+        }
+    }
 }

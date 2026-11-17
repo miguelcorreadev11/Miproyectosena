@@ -535,7 +535,7 @@ public class Busqueda_Productos_Form extends javax.swing.JFrame {
     }//GEN-LAST:event_jButtonAgregarACompraActionPerformed
 
     // Consulta los productos con los filtros y vuelve a dibujar las tarjetas.
-    private void buscarProductos() {
+    void buscarProductos() {
         // Categoría elegida o el texto 'Todos'.
         Object categoria = jComboBoxCategoria.getSelectedItem();
         // SELECT con LIKE por nombre, descripción o categoría; 'Todos' se envía como null.

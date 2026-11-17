@@ -16,15 +16,20 @@ import modelo.Producto;
 // Usuario de la sesión, responsable del movimiento.
 import modelo.Usuario;
 
-// Controlador de Movimientos_Form: valida entradas, salidas, ajustes y devoluciones.
+// Controlador de Movimientos_Form: valida entradas, salidas, ajustes, devoluciones y transferencias.
 public class Movimiento_control {
     // Texto de la opción 'sin filtro' en los combos de consulta.
     public static final String FILTRO_TODOS = "Todos";
+    // Opción del formulario para trasladar entre almacenes. No es un valor del ENUM: se guarda como
+    // una 'salida' en el origen y una 'entrada' en el destino.
+    public static final String TIPO_TRANSFERENCIA = "transferencia";
 
-    // Tipos de movimiento para el combo del formulario de registro.
+    // Tipos de movimiento para el combo del formulario de registro (ENUM + transferencia).
     public static String[] getTiposMovimiento() {
-        // Toma los valores del ENUM tipo_movimiento definidos en el modelo.
-        return MovimientoInventario.getTiposMovimiento();
+        String[] tipos = MovimientoInventario.getTiposMovimiento();
+        String[] opciones = java.util.Arrays.copyOf(tipos, tipos.length + 1);
+        opciones[tipos.length] = TIPO_TRANSFERENCIA;
+        return opciones;
     }
 
     // Tipos para el combo de filtro, con 'Todos' como primera opción.
@@ -55,10 +60,16 @@ public class Movimiento_control {
         return inventario == null ? 0 : inventario.getCantidadDisponible();
     }
 
-    // Valida el formulario y registra el movimiento; en 'ajuste' la cantidad es la nueva
-    // existencia contada. La fecha y hora las asigna el modelo con la hora del servidor MySQL.
+    // Versión sin almacén destino, para los tipos que afectan un solo almacén.
     public static boolean registrarMovimiento(Producto producto, Almacen almacen, String tipo,
             String cantidadTexto, String motivo) {
+        return registrarMovimiento(producto, almacen, null, tipo, cantidadTexto, motivo);
+    }
+
+    // Valida el formulario y registra el movimiento; en 'ajuste' la cantidad es la nueva existencia
+    // contada y en 'transferencia' se usa además el almacén destino. La fecha la asigna MySQL.
+    public static boolean registrarMovimiento(Producto producto, Almacen almacen, Almacen almacenDestino,
+            String tipo, String cantidadTexto, String motivo) {
         // Usuario autenticado que quedará como responsable (id_usuario).
         Usuario usuario = Login_control.getUsuarioSesion();
         // movimientoinventario.id_usuario es obligatorio: se exige sesión iniciada.
@@ -119,8 +130,9 @@ public class Movimiento_control {
 
         // Motivo sin espacios sobrantes; vacío si llega null.
         String motivoLimpio = motivo == null ? "" : motivo.trim();
-        // El motivo es opcional solo en las entradas.
-        if (!MovimientoInventario.TIPO_ENTRADA.equals(tipo) && motivoLimpio.isEmpty()) {
+        boolean esTransferencia = TIPO_TRANSFERENCIA.equals(tipo);
+        // El motivo es opcional en entradas y transferencias (estas ya anotan origen y destino).
+        if (!MovimientoInventario.TIPO_ENTRADA.equals(tipo) && !esTransferencia && motivoLimpio.isEmpty()) {
             // Avisa que falta el motivo.
             JOptionPane.showMessageDialog(null, "Indique el motivo del movimiento", "Campo obligatorio",
                     JOptionPane.WARNING_MESSAGE);
@@ -136,6 +148,17 @@ public class Movimiento_control {
             return false;
         }
 
+        if (esTransferencia && almacenDestino == null) {
+            JOptionPane.showMessageDialog(null, "Seleccione el almacén destino de la transferencia",
+                    "Campo obligatorio", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        if (esTransferencia && almacenDestino.getIdAlmacen().equals(almacen.getIdAlmacen())) {
+            JOptionPane.showMessageDialog(null, "El almacén destino debe ser distinto del almacén de origen",
+                    "Transferencia no válida", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+
         // Existencia actual en el almacén, consultada antes de validar la salida.
         int existencia = existenciaActual(producto, almacen);
         // Si la existencia no se pudo consultar (error de MySQL ya informado), el 0 no es real:
@@ -143,9 +166,9 @@ public class Movimiento_control {
         if (config.conexión_BD.huboErrorEnUltimaOperacion()) {
             return false;
         }
-        // Las salidas y devoluciones restan unidades del almacén.
+        // Las salidas, devoluciones y transferencias restan unidades del almacén de origen.
         boolean restaExistencia = MovimientoInventario.TIPO_SALIDA.equals(tipo)
-                || MovimientoInventario.TIPO_DEVOLUCION.equals(tipo);
+                || MovimientoInventario.TIPO_DEVOLUCION.equals(tipo) || esTransferencia;
         // No se permite dejar el inventario en negativo.
         if (restaExistencia && cantidad > existencia) {
             // Informa la existencia disponible y la cantidad solicitada.
@@ -162,6 +185,20 @@ public class Movimiento_control {
                     + "); no hay nada que ajustar", "Sin cambios", JOptionPane.INFORMATION_MESSAGE);
             // Detiene el registro.
             return false;
+        }
+
+        if (esTransferencia) {
+            // Salida del origen y entrada al destino en una sola transacción (el modelo vuelve a validar
+            // la existencia con la fila bloqueada, por si cambió desde esta consulta).
+            boolean transferida = MovimientoInventario.registrarTransferencia(producto.getIdProducto(),
+                    almacen.getIdAlmacen(), almacen.getNombre(), almacenDestino.getIdAlmacen(),
+                    almacenDestino.getNombre(), usuario.getIdUsuario(), cantidad, motivoLimpio);
+            if (transferida) {
+                JOptionPane.showMessageDialog(null, "Transferencia registrada: " + cantidad + " unidad(es) de "
+                        + producto.getNombre() + " pasaron de " + almacen.getNombre() + " a "
+                        + almacenDestino.getNombre() + ".", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            }
+            return transferida;
         }
 
         // Crea el movimiento sin compra relacionada (null); un motivo vacío se guarda como NULL.

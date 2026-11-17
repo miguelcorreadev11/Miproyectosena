@@ -103,7 +103,13 @@ public class Producto_control {
         // Si se modificó la fila, confirma al usuario.
         if (actualizado) {
             // Mensaje de éxito.
-            JOptionPane.showMessageDialog(null, "Producto actualizado correctamente", "Éxito",
+            // Relee el producto: si la cantidad guardada no es la escrita, es porque la llevan los almacenes.
+            Producto guardado = Producto.getProductoPorId(idProducto);
+            boolean cantidadConservada = guardado != null && cantidad != null
+                    && !cantidad.equals(guardado.getCantidad());
+            JOptionPane.showMessageDialog(null, "Producto actualizado correctamente" + (cantidadConservada
+                    ? ".\nLa cantidad total (" + guardado.getCantidad() + ") no se cambió porque se calcula con el "
+                    + "inventario de los almacenes; use Movimientos para modificarla." : ""), "Éxito",
                     JOptionPane.INFORMATION_MESSAGE);
         // El UPDATE no encontró la fila (fue eliminada o cambiada por otra sesión).
         // Si el false se debe a un error de MySQL, ese error ya se mostró: no se pide recargar ni redigitar.

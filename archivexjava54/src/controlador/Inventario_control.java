@@ -102,6 +102,10 @@ public class Inventario_control {
             // Mensaje de éxito.
             JOptionPane.showMessageDialog(null, "Inventario actualizado correctamente", "Éxito",
                     JOptionPane.INFORMATION_MESSAGE);
+        } else if (!config.conexión_BD.huboErrorEnUltimaOperacion()) {
+            // El registro fue eliminado por otra operación desde que se cargó la tabla.
+            JOptionPane.showMessageDialog(null, "El registro de inventario seleccionado ya no existe. "
+                    + "Actualice la tabla e intente de nuevo.", "Registro no encontrado", JOptionPane.WARNING_MESSAGE);
         }
         // Devuelve el resultado a la vista.
         return actualizado;
@@ -135,6 +139,10 @@ public class Inventario_control {
             // Mensaje de éxito.
             JOptionPane.showMessageDialog(null, "Registro de inventario eliminado correctamente", "Éxito",
                     JOptionPane.INFORMATION_MESSAGE);
+        } else if (!config.conexión_BD.huboErrorEnUltimaOperacion()) {
+            // El registro fue eliminado por otra operación desde que se cargó la tabla.
+            JOptionPane.showMessageDialog(null, "El registro de inventario seleccionado ya no existe. "
+                    + "Actualice la tabla e intente de nuevo.", "Registro no encontrado", JOptionPane.WARNING_MESSAGE);
         }
         // Devuelve el resultado a la vista.
         return eliminado;

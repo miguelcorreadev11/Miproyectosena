@@ -395,7 +395,7 @@ public class Producto {
         return null;
     }
 
-    // UPDATE de todos los datos editables del producto por id, incluida la imagen.
+    // UPDATE de los datos editables del producto por id, incluida la imagen.
     public static boolean updateProducto(Producto producto) {
         // Obtiene la conexión compartida con MySQL desde config.conexión_BD.
         Connection con = config.conexión_BD.getConnection();
@@ -407,9 +407,11 @@ public class Producto {
             // Sin conexión la operación termina aquí.
             return false;
         }
-        // Sentencia parametrizada filtrada por id_producto.
+        // Si el producto ya tiene existencias por almacén, su cantidad total la llevan los movimientos y
+        // se conserva la de MySQL; así no se pisa con el valor que se cargó antes en el formulario.
         String query = "UPDATE productos SET nombre = ?, descripcion = ?, id_categoria = ?, "
-                + "precio_compra = ?, precio_venta = ?, cantidad = ?, "
+                + "precio_compra = ?, precio_venta = ?, cantidad = CASE WHEN EXISTS (SELECT 1 FROM "
+                + "inventarioporalmacen i WHERE i.id_producto = ?) THEN cantidad ELSE ? END, "
                 + "estado = ?, imagen = ? WHERE id_producto = ?";
 
         // Prepara la sentencia parametrizada; try-with-resources la cierra al terminar.
@@ -424,14 +426,16 @@ public class Producto {
             ps.setBigDecimal(4, producto.getPrecioCompra());
             // Parámetro 5: precio de venta.
             ps.setBigDecimal(5, producto.getPrecioVenta());
-            // Parámetro 6: cantidad (sobrescribe la cantidad total con el valor del formulario).
-            ps.setInt(6, producto.getCantidad());
-            // Parámetro 7: estado.
-            ps.setString(7, producto.getEstado());
-            // Parámetro 8: nombre de la imagen o NULL si se quitó.
-            ps.setString(8, producto.getImagen());
-            // Parámetro 9: id de la fila a modificar.
-            ps.setInt(9, producto.getIdProducto());
+            // Parámetro 6: id del producto para comprobar si tiene inventario por almacén.
+            ps.setInt(6, producto.getIdProducto());
+            // Parámetro 7: cantidad del formulario (solo se usa si no tiene inventario por almacén).
+            ps.setInt(7, producto.getCantidad());
+            // Parámetro 8: estado.
+            ps.setString(8, producto.getEstado());
+            // Parámetro 9: nombre de la imagen o NULL si se quitó.
+            ps.setString(9, producto.getImagen());
+            // Parámetro 10: id de la fila a modificar.
+            ps.setInt(10, producto.getIdProducto());
 
             // Ejecuta la sentencia y devuelve true si afectó al menos una fila.
             return ps.executeUpdate() != 0;

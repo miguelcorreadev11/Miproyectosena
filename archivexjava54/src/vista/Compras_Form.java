@@ -641,8 +641,8 @@ public class Compras_Form extends javax.swing.JFrame {
 
     // Botón Guardar: registra la compra y sus líneas en MySQL.
     private void jButtonGuardarCompraActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonGuardarCompraActionPerformed
-        // Valida y guarda en una transacción.
-        guardarCompra();
+        // Valida y guarda en una transacción; el botón se bloquea para que un doble clic no la repita.
+        RecursosApp.ejecutarUnaVez(jButtonGuardarCompra, this::guardarCompra);
     }//GEN-LAST:event_jButtonGuardarCompraActionPerformed
 
     // Cambio del filtro de estado: recarga la lista de compras.
@@ -663,11 +663,8 @@ public class Compras_Form extends javax.swing.JFrame {
     // Botón Marcar entregada: suma las líneas al inventario del almacén destino y registra
     // movimientos 'entrada'; solo funciona con compras pendientes.
     private void jButtonMarcarEntregadaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonMarcarEntregadaActionPerformed
-        // Si se entregó, recarga la tabla para mostrar el nuevo estado.
-        if (Compra_control.marcarEntregada(compraSeleccionada())) {
-            // Recarga la tabla.
-            cargarCompras();
-        }
+        // El botón se bloquea mientras se procesa para que un doble clic no intente entregarla dos veces.
+        RecursosApp.ejecutarUnaVez(jButtonMarcarEntregada, this::entregarCompraSeleccionada);
     }//GEN-LAST:event_jButtonMarcarEntregadaActionPerformed
 
     // Botón Cancelar compra: anula una compra pendiente sin tocar el inventario.
@@ -908,8 +905,18 @@ public class Compras_Form extends javax.swing.JFrame {
         }
     }
 
+    // Entrega la compra elegida (suma su detalle al inventario del almacén destino) y vuelve a leer
+    // las compras desde MySQL, también si falló, para no seguir mostrando un estado viejo.
+    private void entregarCompraSeleccionada() {
+        boolean entregada = Compra_control.marcarEntregada(compraSeleccionada());
+        cargarCompras();
+        if (entregada) {
+            RecursosApp.refrescarInventarioAbierto(this);
+        }
+    }
+
     // Consulta las compras con el filtro de estado y llena la tabla.
-    private void cargarCompras() {
+    void cargarCompras() {
         // SELECT con JOIN a proveedores y almacenes.
         listaCompras = Compra_control.listarCompras((String) jComboBoxFiltroEstado.getSelectedItem());
         // Modelo de la tabla de compras.

@@ -155,46 +155,38 @@ public class InventarioPorAlmacen {
         this.nombreAlmacen = nombreAlmacen;
     }
 
-    // INSERT del inventario de un producto en un almacén; true si se creó la fila.
+    // INSERT del inventario de un producto en un almacén y suma de esas unidades a productos.cantidad,
+    // en una misma transacción para que el total general siga igual a la suma de los almacenes.
     public static boolean insertInventario(InventarioPorAlmacen inventario) {
-        // Obtiene la conexión compartida con MySQL desde config.conexión_BD.
         Connection con = config.conexión_BD.getConnection();
-        // getConnection() devuelve null cuando MySQL no está disponible.
         if (con == null) {
-            // Informa al usuario que no hay conexión con la base de datos.
             JOptionPane.showMessageDialog(null, config.conexión_BD.MENSAJE_SIN_CONEXION,
                     "Error de conexión", JOptionPane.ERROR_MESSAGE);
-            // Sin conexión la operación termina aquí.
             return false;
         }
-        // Sentencia parametrizada: producto, almacén y cantidades.
         String query = "INSERT INTO inventarioporalmacen (id_producto, id_almacen, cantidad_disponible, "
                 + "cantidad_reservada) VALUES (?, ?, ?, ?)";
-
-        // Prepara la sentencia parametrizada; try-with-resources la cierra al terminar.
-        try (PreparedStatement ps = con.prepareStatement(query)) {
-            // Parámetro 1: id del producto.
-            ps.setInt(1, inventario.getIdProducto());
-            // Parámetro 2: id del almacén.
-            ps.setInt(2, inventario.getIdAlmacen());
-            // Parámetro 3: cantidad disponible.
-            ps.setInt(3, inventario.getCantidadDisponible());
-            // Parámetro 4: cantidad reservada.
-            ps.setInt(4, inventario.getCantidadReservada());
-
-            // Ejecuta la sentencia y devuelve true si afectó al menos una fila.
-            return ps.executeUpdate() != 0;
-        // Captura errores de MySQL: restricciones, llaves foráneas, sintaxis o conexión perdida.
+        try {
+            con.setAutoCommit(false);
+            try (PreparedStatement ps = con.prepareStatement(query)) {
+                ps.setInt(1, inventario.getIdProducto());
+                ps.setInt(2, inventario.getIdAlmacen());
+                ps.setInt(3, inventario.getCantidadDisponible());
+                ps.setInt(4, inventario.getCantidadReservada());
+                ps.executeUpdate();
+            }
+            sumarAlTotalDelProducto(con, inventario.getIdProducto(), inventario.getCantidadDisponible());
+            con.commit();
+            return true;
         } catch (SQLException ex) {
-            // Marca el error para que el controlador no lo confunda con un dato inválido.
             config.conexión_BD.registrarError();
-            // Registra la traza del error en la consola de NetBeans.
+            MovimientoInventario.deshacer(con);
             Logger.getLogger(InventarioPorAlmacen.class.getName()).log(Level.SEVERE, null, ex);
-            // Muestra al usuario el mensaje de error devuelto por MySQL.
-            JOptionPane.showMessageDialog(null, "Error al registrar el inventario: " + ex.getMessage(),
-                    "Error de base de datos", JOptionPane.ERROR_MESSAGE);
-            // La operación falló; el controlador recibe este resultado.
+            JOptionPane.showMessageDialog(null, "Error al registrar el inventario: "
+                    + MovimientoInventario.mensajeParaUsuario(ex), "Error de base de datos", JOptionPane.ERROR_MESSAGE);
             return false;
+        } finally {
+            MovimientoInventario.restaurarAutoCommit(con);
         }
     }
 
@@ -380,83 +372,115 @@ public class InventarioPorAlmacen {
         return getInventarioPorProductoYAlmacen(idProducto, idAlmacen) != null;
     }
 
-    // UPDATE directo de producto, almacén y cantidades por id (sin movimiento ni historial).
+    // UPDATE directo de producto, almacén y cantidades por id (sin movimiento ni historial). La diferencia
+    // con lo que había en MySQL (leído con bloqueo, no lo que muestra la pantalla) se aplica a productos.cantidad.
     public static boolean updateInventario(InventarioPorAlmacen inventario) {
-        // Obtiene la conexión compartida con MySQL desde config.conexión_BD.
         Connection con = config.conexión_BD.getConnection();
-        // getConnection() devuelve null cuando MySQL no está disponible.
         if (con == null) {
-            // Informa al usuario que no hay conexión con la base de datos.
             JOptionPane.showMessageDialog(null, config.conexión_BD.MENSAJE_SIN_CONEXION,
                     "Error de conexión", JOptionPane.ERROR_MESSAGE);
-            // Sin conexión la operación termina aquí.
             return false;
         }
-        // Sentencia parametrizada filtrada por id_inventario.
         String query = "UPDATE inventarioporalmacen SET id_producto = ?, id_almacen = ?, "
                 + "cantidad_disponible = ?, cantidad_reservada = ? WHERE id_inventario = ?";
-
-        // Prepara la sentencia parametrizada; try-with-resources la cierra al terminar.
-        try (PreparedStatement ps = con.prepareStatement(query)) {
-            // Parámetro 1: id del producto.
-            ps.setInt(1, inventario.getIdProducto());
-            // Parámetro 2: id del almacén.
-            ps.setInt(2, inventario.getIdAlmacen());
-            // Parámetro 3: cantidad disponible.
-            ps.setInt(3, inventario.getCantidadDisponible());
-            // Parámetro 4: cantidad reservada.
-            ps.setInt(4, inventario.getCantidadReservada());
-            // Parámetro 5: id de la fila a modificar.
-            ps.setInt(5, inventario.getIdInventario());
-
-            // Ejecuta la sentencia y devuelve true si afectó al menos una fila.
-            return ps.executeUpdate() != 0;
-        // Captura errores de MySQL: restricciones, llaves foráneas, sintaxis o conexión perdida.
+        try {
+            con.setAutoCommit(false);
+            InventarioPorAlmacen anterior = leerConBloqueo(con, inventario.getIdInventario());
+            if (anterior == null) {
+                // Otra sesión eliminó el registro: no hay nada que actualizar.
+                con.rollback();
+                return false;
+            }
+            try (PreparedStatement ps = con.prepareStatement(query)) {
+                ps.setInt(1, inventario.getIdProducto());
+                ps.setInt(2, inventario.getIdAlmacen());
+                ps.setInt(3, inventario.getCantidadDisponible());
+                ps.setInt(4, inventario.getCantidadReservada());
+                ps.setInt(5, inventario.getIdInventario());
+                ps.executeUpdate();
+            }
+            if (anterior.getIdProducto().equals(inventario.getIdProducto())) {
+                sumarAlTotalDelProducto(con, inventario.getIdProducto(),
+                        inventario.getCantidadDisponible() - anterior.getCantidadDisponible());
+            } else {
+                // Cambió el producto: sus unidades pasan del producto anterior al nuevo.
+                sumarAlTotalDelProducto(con, anterior.getIdProducto(), -anterior.getCantidadDisponible());
+                sumarAlTotalDelProducto(con, inventario.getIdProducto(), inventario.getCantidadDisponible());
+            }
+            con.commit();
+            return true;
         } catch (SQLException ex) {
-            // Marca el error para que el controlador no lo confunda con un dato inválido.
             config.conexión_BD.registrarError();
-            // Registra la traza del error en la consola de NetBeans.
+            MovimientoInventario.deshacer(con);
             Logger.getLogger(InventarioPorAlmacen.class.getName()).log(Level.SEVERE, null, ex);
-            // Muestra al usuario el mensaje de error devuelto por MySQL.
-            JOptionPane.showMessageDialog(null, "Error al actualizar el inventario: " + ex.getMessage(),
-                    "Error de base de datos", JOptionPane.ERROR_MESSAGE);
-            // La operación falló; el controlador recibe este resultado.
+            JOptionPane.showMessageDialog(null, "Error al actualizar el inventario: "
+                    + MovimientoInventario.mensajeParaUsuario(ex), "Error de base de datos", JOptionPane.ERROR_MESSAGE);
             return false;
+        } finally {
+            MovimientoInventario.restaurarAutoCommit(con);
         }
     }
 
-    // DELETE del registro de inventario por id.
+    // DELETE del registro de inventario por id; sus unidades se descuentan de productos.cantidad
+    // en la misma transacción.
     public static boolean deleteInventario(int idInventario) {
-        // Obtiene la conexión compartida con MySQL desde config.conexión_BD.
         Connection con = config.conexión_BD.getConnection();
-        // getConnection() devuelve null cuando MySQL no está disponible.
         if (con == null) {
-            // Informa al usuario que no hay conexión con la base de datos.
             JOptionPane.showMessageDialog(null, config.conexión_BD.MENSAJE_SIN_CONEXION,
                     "Error de conexión", JOptionPane.ERROR_MESSAGE);
-            // Sin conexión la operación termina aquí.
             return false;
         }
-        // Sentencia de borrado por llave primaria.
-        String query = "DELETE FROM inventarioporalmacen WHERE id_inventario = ?";
-
-        // Prepara la sentencia parametrizada; try-with-resources la cierra al terminar.
-        try (PreparedStatement ps = con.prepareStatement(query)) {
-            // Parámetro 1: id a eliminar.
-            ps.setInt(1, idInventario);
-            // Ejecuta la sentencia y devuelve true si afectó al menos una fila.
-            return ps.executeUpdate() != 0;
-        // Captura errores de MySQL: restricciones, llaves foráneas, sintaxis o conexión perdida.
+        try {
+            con.setAutoCommit(false);
+            InventarioPorAlmacen anterior = leerConBloqueo(con, idInventario);
+            if (anterior == null) {
+                con.rollback();
+                return false;
+            }
+            try (PreparedStatement ps = con.prepareStatement("DELETE FROM inventarioporalmacen WHERE id_inventario = ?")) {
+                ps.setInt(1, idInventario);
+                ps.executeUpdate();
+            }
+            sumarAlTotalDelProducto(con, anterior.getIdProducto(), -anterior.getCantidadDisponible());
+            con.commit();
+            return true;
         } catch (SQLException ex) {
-            // Marca el error para que el controlador no lo confunda con un dato inválido.
             config.conexión_BD.registrarError();
-            // Registra la traza del error en la consola de NetBeans.
+            MovimientoInventario.deshacer(con);
             Logger.getLogger(InventarioPorAlmacen.class.getName()).log(Level.SEVERE, null, ex);
-            // Muestra al usuario el mensaje de error devuelto por MySQL.
-            JOptionPane.showMessageDialog(null, "Error al eliminar el inventario: " + ex.getMessage(),
-                    "Error de base de datos", JOptionPane.ERROR_MESSAGE);
-            // La operación falló; el controlador recibe este resultado.
+            JOptionPane.showMessageDialog(null, "Error al eliminar el inventario: "
+                    + MovimientoInventario.mensajeParaUsuario(ex), "Error de base de datos", JOptionPane.ERROR_MESSAGE);
             return false;
+        } finally {
+            MovimientoInventario.restaurarAutoCommit(con);
+        }
+    }
+
+    // Lee el registro con FOR UPDATE dentro de la transacción en curso; null si ya no existe.
+    private static InventarioPorAlmacen leerConBloqueo(Connection con, int idInventario) throws SQLException {
+        try (PreparedStatement ps = con.prepareStatement("SELECT id_inventario, id_producto, id_almacen, "
+                + "cantidad_disponible, cantidad_reservada, fecha_de_actualizacion FROM inventarioporalmacen "
+                + "WHERE id_inventario = ? FOR UPDATE")) {
+            ps.setInt(1, idInventario);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? mapResultSet(rs) : null;
+            }
+        }
+    }
+
+    // Suma (o resta, si es negativa) la diferencia a productos.cantidad con la misma fórmula que
+    // usa MovimientoInventario, calculada en MySQL sobre el valor actual de la fila.
+    private static void sumarAlTotalDelProducto(Connection con, int idProducto, int diferencia) throws SQLException {
+        if (diferencia == 0) {
+            return;
+        }
+        try (PreparedStatement ps = con.prepareStatement("UPDATE productos SET "
+                + "cantidad = GREATEST(CAST(cantidad AS SIGNED) + ?, 0) WHERE id_producto = ?")) {
+            ps.setInt(1, diferencia);
+            ps.setInt(2, idProducto);
+            if (ps.executeUpdate() == 0) {
+                throw new SQLException("el producto seleccionado ya no existe");
+            }
         }
     }
 

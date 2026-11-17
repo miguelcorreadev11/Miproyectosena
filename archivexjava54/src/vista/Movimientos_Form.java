@@ -122,6 +122,8 @@ public class Movimientos_Form extends javax.swing.JFrame {
         jLabelAyudaCantidad = new javax.swing.JLabel();
         jLabelMotivo = new javax.swing.JLabel();
         jTextFieldMotivo = new javax.swing.JTextField();
+        jLabelAlmacenDestino = new javax.swing.JLabel();
+        jComboBoxAlmacenDestino = new javax.swing.JComboBox<>();
         jPanelBotonesMovimiento = new javax.swing.JPanel();
         jButtonRegistrarMovimiento = new javax.swing.JButton();
         jButtonLimpiarMovimiento = new javax.swing.JButton();
@@ -283,7 +285,7 @@ public class Movimientos_Form extends javax.swing.JFrame {
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 2;
+        gridBagConstraints.gridy = 3;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
         gridBagConstraints.insets = new java.awt.Insets(4, 6, 4, 6);
         jPanelFormularioMovimiento.add(jLabelMotivo, gridBagConstraints);
@@ -291,12 +293,28 @@ public class Movimientos_Form extends javax.swing.JFrame {
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 2;
+        gridBagConstraints.gridy = 3;
         gridBagConstraints.gridwidth = 5;
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
         gridBagConstraints.insets = new java.awt.Insets(4, 6, 4, 6);
         jPanelFormularioMovimiento.add(jTextFieldMotivo, gridBagConstraints);
+
+        jLabelAlmacenDestino.setText("Destino:");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 2;
+        gridBagConstraints.gridy = 2;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+        gridBagConstraints.insets = new java.awt.Insets(4, 20, 4, 6);
+        jPanelFormularioMovimiento.add(jLabelAlmacenDestino, gridBagConstraints);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 3;
+        gridBagConstraints.gridy = 2;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(4, 6, 4, 6);
+        jPanelFormularioMovimiento.add(jComboBoxAlmacenDestino, gridBagConstraints);
         jPanelBotonesMovimiento.setBackground(new java.awt.Color(11, 18, 32));
         jPanelBotonesMovimiento.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 8, 6));
         jButtonRegistrarMovimiento.setBackground(new java.awt.Color(237, 149, 62));
@@ -327,7 +345,7 @@ public class Movimientos_Form extends javax.swing.JFrame {
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 3;
+        gridBagConstraints.gridy = 4;
         gridBagConstraints.gridwidth = 6;
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
@@ -485,8 +503,8 @@ public class Movimientos_Form extends javax.swing.JFrame {
 
     // Botón Registrar: guarda el movimiento en MySQL.
     private void jButtonRegistrarMovimientoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRegistrarMovimientoActionPerformed
-        // Valida y registra el movimiento.
-        registrarMovimiento();
+        // Valida y registra el movimiento; el botón se bloquea mientras tanto para evitar doble registro.
+        RecursosApp.ejecutarUnaVez(jButtonRegistrarMovimiento, this::registrarMovimiento);
     }//GEN-LAST:event_jButtonRegistrarMovimientoActionPerformed
 
     // Botón Limpiar: vacía cantidad y motivo.
@@ -541,9 +559,12 @@ public class Movimientos_Form extends javax.swing.JFrame {
         // Primera opción del filtro: 'Todos'.
         jComboBoxFiltroAlmacen.addItem(Movimiento_control.FILTRO_TODOS);
         // Recorre los almacenes activos.
+        jComboBoxAlmacenDestino.removeAllItems();
         for (Almacen almacen : almacenes) {
             // Agrega el almacén al formulario.
             jComboBoxAlmacen.addItem(almacen);
+            // Los mismos almacenes activos pueden ser destino de una transferencia.
+            jComboBoxAlmacenDestino.addItem(almacen);
         }
 
         // El filtro incluye también los almacenes inactivos para consultar su historial.
@@ -554,7 +575,7 @@ public class Movimientos_Form extends javax.swing.JFrame {
 
         // Vacía el combo de tipo.
         jComboBoxTipo.removeAllItems();
-        // Tipos del ENUM tipo_movimiento.
+        // Tipos del ENUM tipo_movimiento más la opción de transferencia entre almacenes.
         for (String tipo : Movimiento_control.getTiposMovimiento()) {
             // Agrega cada tipo.
             jComboBoxTipo.addItem(tipo);
@@ -586,7 +607,7 @@ public class Movimientos_Form extends javax.swing.JFrame {
     }
 
     // Muestra la existencia del producto en el almacén elegido (tabla inventarioporalmacen).
-    private void actualizarExistencia() {
+    void actualizarExistencia() {
         // Los combos se están llenando.
         if (cargando) {
             // No consulta todavía.
@@ -616,6 +637,20 @@ public class Movimientos_Form extends javax.swing.JFrame {
         }
         // Tipo elegido.
         String tipo = (String) jComboBoxTipo.getSelectedItem();
+        // El almacén destino solo se muestra en las transferencias.
+        boolean esTransferencia = Movimiento_control.TIPO_TRANSFERENCIA.equals(tipo);
+        jLabelAlmacenDestino.setVisible(esTransferencia);
+        jComboBoxAlmacenDestino.setVisible(esTransferencia);
+        // Propone como destino el primer almacén distinto del de origen.
+        if (esTransferencia && jComboBoxAlmacenDestino.getSelectedItem() == jComboBoxAlmacen.getSelectedItem()) {
+            for (int i = 0; i < jComboBoxAlmacenDestino.getItemCount(); i++) {
+                if (jComboBoxAlmacenDestino.getItemAt(i) != jComboBoxAlmacen.getSelectedItem()) {
+                    jComboBoxAlmacenDestino.setSelectedIndex(i);
+                    break;
+                }
+            }
+        }
+        jPanelFormularioMovimiento.revalidate();
         // Entrada.
         if (MovimientoInventario.TIPO_ENTRADA.equals(tipo)) {
             // Ayuda para entradas.
@@ -632,6 +667,8 @@ public class Movimientos_Form extends javax.swing.JFrame {
         } else if (MovimientoInventario.TIPO_DEVOLUCION.equals(tipo)) {
             // Ayuda para devoluciones.
             jLabelAyudaCantidad.setText("Unidades devueltas al proveedor (salen del almacén)");
+        } else if (esTransferencia) {
+            jLabelAyudaCantidad.setText("Unidades que pasan al almacén destino");
         // Sin tipo elegido.
         } else {
             // Deja un espacio para conservar la altura de la etiqueta.
@@ -641,12 +678,15 @@ public class Movimientos_Form extends javax.swing.JFrame {
 
     // Envía el movimiento al controlador y, si se guardó, refresca existencia e historial.
     private void registrarMovimiento() {
+        String tipo = (String) jComboBoxTipo.getSelectedItem();
         // Valida cantidad, sesión y existencia, y registra el movimiento en una transacción
         // (inventario, productos.cantidad, movimientoinventario e historialinventario).
         boolean registrado = Movimiento_control.registrarMovimiento(
                 (Producto) jComboBoxProducto.getSelectedItem(),
                 (Almacen) jComboBoxAlmacen.getSelectedItem(),
-                (String) jComboBoxTipo.getSelectedItem(),
+                Movimiento_control.TIPO_TRANSFERENCIA.equals(tipo)
+                        ? (Almacen) jComboBoxAlmacenDestino.getSelectedItem() : null,
+                tipo,
                 jTextFieldCantidad.getText(),
                 jTextFieldMotivo.getText());
         // Si se registró.
@@ -659,11 +699,13 @@ public class Movimientos_Form extends javax.swing.JFrame {
             actualizarExistencia();
             // Agrega el movimiento al historial visible.
             cargarMovimientos();
+            // Las demás ventanas abiertas vuelven a leer las existencias desde MySQL.
+            RecursosApp.refrescarInventarioAbierto(this);
         }
     }
 
     // Consulta los movimientos con los filtros y llena la tabla.
-    private void cargarMovimientos() {
+    void cargarMovimientos() {
         // Filtro de producto: un Producto o el texto 'Todos'.
         Object producto = jComboBoxFiltroProducto.getSelectedItem();
         // Filtro de almacén: un Almacen o el texto 'Todos'.
@@ -747,12 +789,14 @@ public class Movimientos_Form extends javax.swing.JFrame {
     private javax.swing.JButton jButtonRegistrarMovimiento;
     private javax.swing.JButton jButtonVolver;
     private javax.swing.JComboBox<Almacen> jComboBoxAlmacen;
+    private javax.swing.JComboBox<Almacen> jComboBoxAlmacenDestino;
     private javax.swing.JComboBox<Object> jComboBoxFiltroAlmacen;
     private javax.swing.JComboBox<Object> jComboBoxFiltroProducto;
     private javax.swing.JComboBox<String> jComboBoxFiltroTipo;
     private javax.swing.JComboBox<Producto> jComboBoxProducto;
     private javax.swing.JComboBox<String> jComboBoxTipo;
     private javax.swing.JLabel jLabelAlmacen;
+    private javax.swing.JLabel jLabelAlmacenDestino;
     private javax.swing.JLabel jLabelAyudaCantidad;
     private javax.swing.JLabel jLabelCantidad;
     private javax.swing.JLabel jLabelConsultaTitulo;

@@ -740,7 +740,7 @@ public class Productos_Inventario_Form extends javax.swing.JFrame {
     }
 
     // Consulta los productos en MySQL y vuelve a llenar la tabla.
-    private void cargarProductos() {
+    void cargarProductos() {
         // SELECT de los productos de la tabla productos.
         listaProductos = Producto_control.listarProductos();
 
@@ -965,19 +965,19 @@ public class Productos_Inventario_Form extends javax.swing.JFrame {
     // Botón Registrar: crea un registro de inventario nuevo.
     private void jButtonRegistrarInventarioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRegistrarInventarioActionPerformed
         // Valida los datos y ejecuta el INSERT.
-        registrarInventario();
+        RecursosApp.ejecutarUnaVez(jButtonRegistrarInventario, this::registrarInventario);
     }//GEN-LAST:event_jButtonRegistrarInventarioActionPerformed
 
     // Botón Actualizar: guarda los cambios del registro de inventario seleccionado.
     private void jButtonActualizarInventarioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonActualizarInventarioActionPerformed
         // Valida los datos y ejecuta el UPDATE.
-        actualizarInventario();
+        RecursosApp.ejecutarUnaVez(jButtonActualizarInventario, this::actualizarInventario);
     }//GEN-LAST:event_jButtonActualizarInventarioActionPerformed
 
     // Botón Eliminar: borra el registro de inventario seleccionado.
     private void jButtonEliminarInventarioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonEliminarInventarioActionPerformed
         // Pide confirmación y ejecuta el DELETE.
-        eliminarInventario();
+        RecursosApp.ejecutarUnaVez(jButtonEliminarInventario, this::eliminarInventario);
     }//GEN-LAST:event_jButtonEliminarInventarioActionPerformed
 
     // Botón Limpiar: vacía el formulario de inventario.
@@ -1026,7 +1026,7 @@ public class Productos_Inventario_Form extends javax.swing.JFrame {
     }
 
     // Consulta los registros de inventario en MySQL y vuelve a llenar la tabla.
-    private void cargarInventario() {
+    void cargarInventario() {
         // SELECT de los registros de inventario de la tabla inventarioporalmacen.
         listaInventario = Inventario_control.listarInventario();
 
@@ -1133,6 +1133,9 @@ public class Productos_Inventario_Form extends javax.swing.JFrame {
                 limpiarCamposInventario();
                 // Recarga la tabla con los datos actuales.
                 cargarInventario();
+                // La cantidad total del producto también cambió: se relee la tabla de productos.
+                cargarProductos();
+                RecursosApp.refrescarInventarioAbierto(this);
             }
         // Un número escrito con letras o formato inválido.
         } catch (NumberFormatException ex) {
@@ -1165,6 +1168,9 @@ public class Productos_Inventario_Form extends javax.swing.JFrame {
                 limpiarCamposInventario();
                 // Recarga la tabla con los datos actuales.
                 cargarInventario();
+                // La cantidad total del producto también cambió: se relee la tabla de productos.
+                cargarProductos();
+                RecursosApp.refrescarInventarioAbierto(this);
             }
         // Un número escrito con letras o formato inválido.
         } catch (NumberFormatException ex) {
@@ -1184,6 +1190,9 @@ public class Productos_Inventario_Form extends javax.swing.JFrame {
             limpiarCamposInventario();
             // Recarga la tabla con los datos actuales.
             cargarInventario();
+            // La cantidad total del producto también cambió: se relee la tabla de productos.
+            cargarProductos();
+            RecursosApp.refrescarInventarioAbierto(this);
         }
     }
 

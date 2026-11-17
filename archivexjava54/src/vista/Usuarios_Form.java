@@ -157,7 +157,7 @@ public class Usuarios_Form extends javax.swing.JFrame {
 
         jLabelTelefono.setText("Teléfono:");
 
-        jLabelContrasena.setText("Contraseña (vacío = no cambiar):");
+        jLabelContrasena.setText("Contraseña:");
 
         jLabelEstado.setText("Estado:");
 

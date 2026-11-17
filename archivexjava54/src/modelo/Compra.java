@@ -568,8 +568,9 @@ public class Compra {
             MovimientoInventario.deshacer(con);
             // Registra la traza del error en la consola de NetBeans.
             Logger.getLogger(Compra.class.getName()).log(Level.SEVERE, null, ex);
-            // Informa el motivo por el que no se entregó.
-            JOptionPane.showMessageDialog(null, "No se pudo marcar la compra como entregada: " + ex.getMessage(),
+            // Informa el motivo por el que no se entregó; el inventario queda como estaba.
+            JOptionPane.showMessageDialog(null, "No se pudo marcar la compra como entregada: "
+                    + MovimientoInventario.mensajeParaUsuario(ex) + ".\nEl inventario no se modificó.",
                     "Error de base de datos", JOptionPane.ERROR_MESSAGE);
             // La operación falló; el controlador recibe este resultado.
             return false;

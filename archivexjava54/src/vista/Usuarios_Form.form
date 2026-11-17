@@ -226,7 +226,7 @@
             </Component>
             <Component class="javax.swing.JLabel" name="jLabelContrasena">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Contraseña (vacío = no cambiar):"/>
+                <Property name="text" type="java.lang.String" value="Contraseña:"/>
               </Properties>
             </Component>
             <Component class="javax.swing.JPasswordField" name="jPasswordFieldContrasena">
